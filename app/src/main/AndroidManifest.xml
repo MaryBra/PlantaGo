@@ -24,7 +24,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".view.TelaInicial" />
-        <activity android:name=".view.TelaDetalhes" />
     </application>
 
 </manifest>
