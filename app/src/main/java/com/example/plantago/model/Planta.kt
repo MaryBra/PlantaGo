@@ -9,6 +9,6 @@ data class Planta(
     val id: Int = 0,
     val nome: String,
     val especie: String,
-    val fotoUrl: String?,
-    val categoriaId: Int // Chave estrangeira
+    val fotoUrl: String? = null,
+    val categoria: String
 )

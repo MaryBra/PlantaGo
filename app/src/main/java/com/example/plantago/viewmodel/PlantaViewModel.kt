@@ -22,17 +22,18 @@ class PlantaViewModel(private val plantaDao: PlantaDao) : ViewModel() {
         }
     }
 
-    fun salvarPlanta(nome: String, especie: String, fotoUrl: String?, categoriaId: Int): String {
-        if (nome.isBlank() || especie.isBlank()) {
+    // Alterado para aceitar 'categoria' como String, não mais Int
+    fun salvarPlanta(nome: String, especie: String, fotoUrl: String?, categoria: String): String {
+        if (nome.isBlank() || especie.isBlank() || categoria.isBlank()) {
             return "Preencha todos os campos obrigatórios!"
         }
 
         val planta = Planta(
-            id = 0,
+            id = 0, // Novo id será gerado automaticamente
             nome = nome,
             especie = especie,
             fotoUrl = fotoUrl,
-            categoriaId = categoriaId
+            categoria = categoria // Categoria agora é uma String
         )
 
         viewModelScope.launch {
@@ -50,8 +51,9 @@ class PlantaViewModel(private val plantaDao: PlantaDao) : ViewModel() {
         }
     }
 
-    fun atualizarPlanta(id: Int, nome: String, especie: String, fotoUrl: String?, categoriaId: Int): String {
-        if (nome.isBlank() || especie.isBlank()) {
+    // Alterado para aceitar 'categoria' como String, não mais Int
+    fun atualizarPlanta(id: Int, nome: String, especie: String, fotoUrl: String?, categoria: String): String {
+        if (nome.isBlank() || especie.isBlank() || categoria.isBlank()) {
             return "Preencha todos os campos obrigatórios!"
         }
 
@@ -60,7 +62,7 @@ class PlantaViewModel(private val plantaDao: PlantaDao) : ViewModel() {
             nome = nome,
             especie = especie,
             fotoUrl = fotoUrl,
-            categoriaId = categoriaId
+            categoria = categoria // Categoria agora é uma String
         )
 
         viewModelScope.launch {

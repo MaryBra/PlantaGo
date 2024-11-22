@@ -1,41 +1,42 @@
 package com.example.plantago
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.plantago.ui.theme.PlantaGoTheme
+import com.example.plantago.view.TelaInicial
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         setContent {
-            PlantaGoTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "MARIANA",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+            BotaoTrocaDeTela()
         }
     }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
+fun BotaoTrocaDeTela() {
+    val context = LocalContext.current
+
+    Button(onClick = {
+        // Intent para abrir a SegundaActivity
+        val intent = Intent(context, TelaInicial::class.java)
+        context.startActivity(intent)
+    }) {
+        Text("Abrir Segunda Activity")
+    }
 }
 
 @Preview(showBackground = true)
@@ -44,4 +45,9 @@ fun GreetingPreview() {
     PlantaGoTheme {
         Greeting("Android")
     }
+}
+
+@Composable
+fun Greeting(name: String) {
+    Text(text = "Hello $name!")
 }
