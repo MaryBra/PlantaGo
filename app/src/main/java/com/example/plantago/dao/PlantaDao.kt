@@ -15,7 +15,7 @@ interface PlantaDao {
     suspend fun atualizarPlanta(planta: Planta)
 
     @Query("SELECT * FROM planta WHERE id = :id")
-    suspend fun obterPlantaPorId(id: Int): Planta?
+    suspend fun obterPlantaPorId(id: kotlin.Long): Planta?
 
     @Query("DELETE FROM planta WHERE id = :id")
     suspend fun deletarPlantaPorId(id: Int)
