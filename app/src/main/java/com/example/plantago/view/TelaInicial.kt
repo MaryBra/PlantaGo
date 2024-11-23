@@ -14,13 +14,11 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
-import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.room.Room
 import com.example.plantago.dao.PlantaDao
 import com.example.plantago.database.AppDatabase
 import com.example.plantago.model.Planta
-import kotlinx.coroutines.launch
 
 class TelaInicial : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,24 +41,35 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
             MainScreen(plantaDao = plantaDao, navController = navController)
         }
         composable(
-            "detalhes/{plantaId}",
-            arguments = listOf(navArgument("plantaId") { type = NavType.StringType }) // O tipo aqui precisa ser String ou Long dependendo do ID
+            route = "detalhes/{plantaId}",
+            arguments = listOf(navArgument("plantaId") { type = NavType.LongType })
         ) { backStackEntry ->
-            val plantaId = backStackEntry.arguments?.getString("plantaId")?.toLong() // Conversão para Long, se necessário
+            val plantaId = backStackEntry.arguments?.getLong("plantaId")
             if (plantaId != null) {
                 TelaDetalhes(plantaId = plantaId)
+            } else {
+                // Caso de falha no argumento
+                Text("Erro ao carregar os detalhes da planta.")
             }
+        }
+        composable("cadastro") {
+            TelaCadastro(plantaDao = plantaDao, navController = navController)
         }
     }
 }
 
 @Composable
+fun TelaDetalhes(plantaId: Long) {
+    Column(modifier = Modifier.padding(16.dp)) {
+        Text(text = "Detalhes da Planta", style = MaterialTheme.typography.titleLarge)
+        Text(text = "ID da Planta: $plantaId", style = MaterialTheme.typography.bodyLarge)
+    }
+}
+
+
+@Composable
 fun MainScreen(plantaDao: PlantaDao, navController: NavHostController) {
-    var nome by remember { mutableStateOf("") }
-    var especie by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("") }
     var plantasList by remember { mutableStateOf<List<Planta>>(emptyList()) }
-    val coroutineScope = rememberCoroutineScope()
 
     // Carrega a lista de plantas ao iniciar
     LaunchedEffect(Unit) {
@@ -68,111 +77,39 @@ fun MainScreen(plantaDao: PlantaDao, navController: NavHostController) {
     }
 
     Column(modifier = Modifier.padding(16.dp)) {
-        // Campo Nome
-        TextField(
-            value = nome,
-            onValueChange = { nome = it },
-            label = { Text("Nome da Planta") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Campo Espécie
-        TextField(
-            value = especie,
-            onValueChange = { especie = it },
-            label = { Text("Espécie da Planta") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Campo Categoria
-        TextField(
-            value = categoria,
-            onValueChange = { categoria = it },
-            label = { Text("Categoria da Planta") },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Botão para adicionar planta
         Button(
-            onClick = {
-                if (nome.isNotEmpty() && especie.isNotEmpty() && categoria.isNotEmpty()) {
-                    val novaPlanta = Planta(
-                        nome = nome,
-                        especie = especie,
-                        categoria = categoria
-                    )
-                    coroutineScope.launch {
-                        plantaDao.inserirPlanta(novaPlanta)
-                        plantasList = plantaDao.buscarTodas()
-                    }
-                    nome = ""
-                    especie = ""
-                    categoria = ""
-                }
-            },
+            onClick = { navController.navigate("cadastro") },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Adicionar Planta")
+            Text("Cadastrar Nova Planta")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de plantas cadastradas
         ListagemPlantas(plantasList) { planta ->
             navController.navigate("detalhes/${planta.id}")
         }
     }
 }
+
 @Composable
 fun ListagemPlantas(plantasList: List<Planta>, onPlantaClick: (Planta) -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
+    LazyColumn(
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.fillMaxSize()
     ) {
-        Text(
-            text = "Plantas Cadastradas:",
-            style = MaterialTheme.typography.titleLarge
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.fillMaxSize()
-        ) {
-            items(plantasList) { planta ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { onPlantaClick(planta) },
-                    elevation = CardDefaults.cardElevation(4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .padding(16.dp)
-                            .fillMaxWidth()
-                    ) {
-                        Text(text = "Nome: ${planta.nome}", style = MaterialTheme.typography.bodyLarge)
-                        Text(text = "Espécie: ${planta.especie}", style = MaterialTheme.typography.bodyMedium)
-                        Text(text = "Categoria: ${planta.categoria}", style = MaterialTheme.typography.bodyMedium)
-                    }
+        items(plantasList) { planta ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onPlantaClick(planta) }
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(text = "Nome: ${planta.nome}", style = MaterialTheme.typography.bodyLarge)
+                    Text(text = "Espécie: ${planta.especie}", style = MaterialTheme.typography.bodyMedium)
+                    Text(text = "Categoria: ${planta.categoria}", style = MaterialTheme.typography.bodyMedium)
                 }
             }
         }
-    }
-}
-
-@Composable
-fun TelaDetalhes(plantaId: Long?) {
-    // Simulação de carregamento dos detalhes (substituir por lógica real)
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text(text = "Detalhes da Planta", style = MaterialTheme.typography.titleLarge)
-        plantaId?.let {
-            Text(text = "ID da Planta: $it", style = MaterialTheme.typography.bodyLarge)
-            // Adicione mais informações conforme necessário
-        } ?: Text(text = "Planta não encontrada.", style = MaterialTheme.typography.bodyMedium)
     }
 }
