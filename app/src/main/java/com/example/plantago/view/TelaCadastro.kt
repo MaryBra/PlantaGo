@@ -78,7 +78,7 @@ fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
             TextField(
                 value = descricao,
                 onValueChange = { descricao = it },
-                label = { Text("Detalhes da Planta") },
+                label = { Text("Descrição da Planta") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)

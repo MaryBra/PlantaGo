@@ -32,6 +32,7 @@ import com.example.plantago.dao.PlantaDao
 import com.example.plantago.database.AppDatabase
 import com.example.plantago.model.Planta
 import com.example.plantago.view.ui.theme.PlantaGoTheme
+import kotlinx.coroutines.launch
 
 class TelaInicial : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,14 +62,25 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
         ) { backStackEntry ->
             val plantaId = backStackEntry.arguments?.getInt("plantaId")
             if (plantaId != null) {
-                TelaDetalhes(plantaId = plantaId, plantaDao = plantaDao)
+                // Passando o navController para TelaDetalhes
+                TelaDetalhes(
+                    plantaId = plantaId,
+                    plantaDao = plantaDao,
+                    navController = navController // Corrigido aqui
+                )
             } else {
                 // Caso de falha no argumento
-                Text(
-                    text = "Erro ao carregar os detalhes da planta.",
-                    color = MaterialTheme.colorScheme.error,
-                    modifier = Modifier.padding(16.dp)
-                )
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Erro ao carregar os detalhes da planta.",
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
         }
         composable("cadastro") {
@@ -78,9 +90,11 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
 }
 
 
+
 @Composable
-fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao) {
+fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostController) {
     var planta by remember { mutableStateOf<Planta?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(plantaId) {
         planta = plantaDao.obterPlantaPorId(plantaId)
@@ -139,6 +153,27 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao) {
                     text = "Categoria: ${it.categoria}",
                     style = MaterialTheme.typography.bodyMedium
                 )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Botão de excluir
+                Button(
+                    onClick = {
+                        coroutineScope.launch {
+                            plantaDao.deletarPlantaPorId(plantaId)
+                            navController.popBackStack() // Volta para a tela anterior após a exclusão
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Excluir Planta")
+                }
             }
         }
     } else {
@@ -163,6 +198,7 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao) {
         }
     }
 }
+
 
 
 @Composable
