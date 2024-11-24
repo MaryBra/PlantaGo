@@ -66,7 +66,7 @@ class PlantaViewModel(private val plantaDao: PlantaDao) : ViewModel() {
         )
 
         viewModelScope.launch {
-            plantaDao.atualizar(plantaAtualizada)
+            plantaDao.atualizarPlanta(plantaAtualizada)
             carregarPlantas()
         }
 

@@ -16,9 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.plantago.ui.theme.PlantaGoTheme
 import com.example.plantago.view.TelaInicial
-import com.example.plantago.view.ui.theme.*
+import com.example.plantago.view.ui.theme.PlantaGoTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

@@ -13,6 +13,11 @@
         android:theme="@style/Theme.PlantaGo"
         tools:targetApi="31">
         <activity
+            android:name=".view.TelaCadastro"
+            android:exported="false"
+            android:label="@string/title_activity_tela_cadastro"
+            android:theme="@style/Theme.PlantaGo" />
+        <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
@@ -25,7 +30,6 @@
         </activity>
         <activity android:name=".view.TelaInicial" />
         <activity android:name=".view.TelaDetalhes" />
-        <activity android:name=".view.TelaEditar" />
     </application>
 
 </manifest>

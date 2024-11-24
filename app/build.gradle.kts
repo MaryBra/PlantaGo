@@ -52,17 +52,15 @@ android {
 
 dependencies {
 
-    implementation("androidx.navigation:navigation-compose:2.7.3")
     implementation("com.google.dagger:dagger-compiler:2.51.1")
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.androidx.runtime.livedata)
     ksp("com.google.dagger:dagger-compiler:2.51.1")
 
     val room_version = "2.6.1"
     implementation("androidx.room:room-runtime:$room_version")
     annotationProcessor("androidx.room:room-compiler:$room_version")
     ksp("androidx.room:room-compiler:$room_version")
+    implementation("io.coil-kt:coil-compose:2.3.0")
     implementation ("androidx.room:room-ktx:$room_version")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

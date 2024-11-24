@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PlantaGo</string>
+    <string name="title_activity_tela_cadastro">TelaCadastro</string>
 </resources>
