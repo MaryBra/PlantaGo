@@ -13,12 +13,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,14 +64,12 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
         ) { backStackEntry ->
             val plantaId = backStackEntry.arguments?.getInt("plantaId")
             if (plantaId != null) {
-                // Passando o navController para TelaDetalhes
                 TelaDetalhes(
                     plantaId = plantaId,
                     plantaDao = plantaDao,
-                    navController = navController // Corrigido aqui
+                    navController = navController
                 )
             } else {
-                // Caso de falha no argumento
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -86,8 +86,22 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
         composable("cadastro") {
             TelaCadastro(plantaDao = plantaDao, navController = navController)
         }
+        composable(
+            route = "editar/{plantaId}",
+            arguments = listOf(navArgument("plantaId") { type = NavType.IntType })
+        ) { backStackEntry ->
+            val plantaId = backStackEntry.arguments?.getInt("plantaId")
+            if (plantaId != null) {
+                TelaEditarPlanta(
+                    plantaId = plantaId,
+                    plantaDao = plantaDao,
+                    navController = navController
+                )
+            }
+        }
     }
 }
+
 
 
 
@@ -96,34 +110,40 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
     var planta by remember { mutableStateOf<Planta?>(null) }
     val coroutineScope = rememberCoroutineScope()
 
+    // Carrega a planta ao iniciar
     LaunchedEffect(plantaId) {
         planta = plantaDao.obterPlantaPorId(plantaId)
     }
 
     if (planta != null) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text(
-                text = "🌱 Detalhes da Planta",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(bottom = 80.dp), // Espaço para os botões inferiores
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                // Título e Divider
+                Text(
+                    text = "🌱 Detalhes da Planta",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Divider(
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    thickness = 1.dp
+                )
 
-            Divider(
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                thickness = 1.dp
-            )
-
-            planta?.let {
-                if (it.fotoUrl != null) {
+                // Foto da Planta
+                if (planta!!.fotoUrl != null) {
                     AsyncImage(
-                        model = it.fotoUrl,
+                        model = planta!!.fotoUrl,
                         contentDescription = "Foto da planta",
                         modifier = Modifier
                             .fillMaxWidth()
@@ -138,41 +158,63 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
                     )
                 }
 
+                // Detalhes da Planta
                 Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = planta!!.nome,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Text(
+                    text = planta!!.descricao,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                )
+                Text(
+                    text = "Categoria: ${planta!!.categoria}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+            }
 
-                Text(
-                    text = "Nome: ${it.nome}",
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.SemiBold
-                )
-                Text(
-                    text = "Descrição: ${it.descricao}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = "Categoria: ${it.categoria}",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
+            // Ícones de ações na parte inferior
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Botão de editar
+                FloatingActionButton(
+                    onClick = { navController.navigate("editar/$plantaId") },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = "Editar Planta"
+                    )
+                }
 
                 // Botão de excluir
-                Button(
+                FloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
                             plantaDao.deletarPlantaPorId(plantaId)
-                            navController.popBackStack() // Volta para a tela anterior após a exclusão
+                            navController.popBackStack()
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.error,
-                        contentColor = MaterialTheme.colorScheme.onError
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp)
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
                 ) {
-                    Text("Excluir Planta")
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Excluir Planta"
+                    )
                 }
             }
         }
@@ -184,20 +226,13 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
                 .background(MaterialTheme.colorScheme.background),
             contentAlignment = Alignment.Center
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                CircularProgressIndicator(
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = "Carregando informações da planta...",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
+            CircularProgressIndicator(
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
+
 
 
 
