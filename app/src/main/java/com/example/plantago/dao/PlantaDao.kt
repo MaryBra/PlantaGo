@@ -1,6 +1,7 @@
 package com.example.plantago.dao
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
 import androidx.room.Update
@@ -12,10 +13,14 @@ interface PlantaDao {
     suspend fun inserirPlanta(planta: Planta)
 
     @Update
-    suspend fun atualizarPlanta(planta: Planta)
+    suspend fun atualizar(planta: Planta)
 
-    @Query("SELECT * FROM planta WHERE id = :id")
-    suspend fun obterPlantaPorId(id: Int): Planta?
+    @Delete
+    suspend fun deletar(planta: Planta)
+
+    @Query("SELECT * FROM planta WHERE id = :id LIMIT 1")
+    suspend fun obterPlantaPorId(id: Long): Planta?
+
 
     @Query("DELETE FROM planta WHERE id = :id")
     suspend fun deletarPlantaPorId(id: Int)
