@@ -16,6 +16,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -30,30 +31,46 @@ import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import androidx.room.Room
 import coil.compose.AsyncImage
+import com.example.plantago.dao.HistoricoDao
 import com.example.plantago.dao.PlantaDao
 import com.example.plantago.database.AppDatabase
+import com.example.plantago.model.Historico
 import com.example.plantago.model.Planta
 import com.example.plantago.view.ui.theme.PlantaGoTheme
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 
 class TelaInicial : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val db = Room.databaseBuilder(applicationContext, AppDatabase::class.java, "planta_database").build()
+        // Inicialização do banco de dados
+        val db = Room.databaseBuilder(
+            applicationContext,
+            AppDatabase::class.java,
+            "planta_database"
+        ).build()
+
+        // DAOs
         val plantaDao = db.plantaDao()
+        val historicoDao = db.historicoDao() // Adiciona o HistoricoDao
 
         setContent {
             PlantaGoTheme { // Envolva o conteúdo no tema
                 val navController = rememberNavController()
-                AppNavHost(navController = navController, plantaDao = plantaDao)
+                AppNavHost(
+                    navController = navController,
+                    plantaDao = plantaDao,
+                    historicoDao = historicoDao // Passe o HistoricoDao para o AppNavHost
+                )
             }
         }
     }
 }
 
+
 @Composable
-fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
+fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao, historicoDao: HistoricoDao) {
     NavHost(navController = navController, startDestination = "main") {
         composable("main") {
             MainScreen(plantaDao = plantaDao, navController = navController)
@@ -67,6 +84,7 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
                 TelaDetalhes(
                     plantaId = plantaId,
                     plantaDao = plantaDao,
+                    historicoDao = historicoDao, // Passe o historicoDao aqui
                     navController = navController
                 )
             } else {
@@ -106,13 +124,20 @@ fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao) {
 
 
 @Composable
-fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostController) {
+fun TelaDetalhes(
+    plantaId: Int,
+    plantaDao: PlantaDao,
+    historicoDao: HistoricoDao,
+    navController: NavHostController
+) {
     var planta by remember { mutableStateOf<Planta?>(null) }
+    var historicoList by remember { mutableStateOf<List<Historico>>(emptyList()) }
     val coroutineScope = rememberCoroutineScope()
 
-    // Carrega a planta ao iniciar
+    // Carrega a planta e o histórico ao iniciar
     LaunchedEffect(plantaId) {
         planta = plantaDao.obterPlantaPorId(plantaId)
+        historicoList = historicoDao.obterHistoricosPorPlanta(plantaId)
     }
 
     if (planta != null) {
@@ -125,12 +150,12 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(bottom = 80.dp), // Espaço para os botões inferiores
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                    .padding(bottom = 100.dp), // Espaço para os botões inferiores
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // Título e Divider
+                // Título
                 Text(
-                    text = "🌱 Detalhes da Planta",
+                    text = "🌱 ${planta!!.nome}",
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.primary
@@ -140,14 +165,13 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
                     thickness = 1.dp
                 )
 
-                // Foto da Planta
+                // Foto da planta
                 if (planta!!.fotoUrl != null) {
                     AsyncImage(
                         model = planta!!.fotoUrl,
                         contentDescription = "Foto da planta",
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .height(200.dp)
+                            .size(200.dp)
                             .clip(RoundedCornerShape(16.dp))
                             .border(
                                 width = 2.dp,
@@ -158,28 +182,45 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
                     )
                 }
 
-                // Detalhes da Planta
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = planta!!.nome,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                // Detalhes da planta
                 Text(
                     text = planta!!.descricao,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(top = 8.dp, bottom = 4.dp)
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
                     text = "Categoria: ${planta!!.categoria}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.secondary
                 )
+
+                // Histórico de regas
+                Text(
+                    text = "💧 Histórico de Regas",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                if (historicoList.isEmpty()) {
+                    Text(
+                        text = "Nenhuma rega registrada.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                } else {
+                    historicoList.forEach { historico ->
+                        val formattedDate = historico.dataHora.substring(0, 16).replace("T", " ")
+                        Text(
+                            text = "🗓️ $formattedDate",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                }
             }
 
-            // Ícones de ações na parte inferior
+            // Botões flutuantes na parte inferior
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -197,6 +238,29 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao, navController: NavHostCont
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = "Editar Planta"
+                    )
+                }
+
+                // Botão de rega
+                FloatingActionButton(
+                    onClick = {
+                        coroutineScope.launch {
+                            val now = LocalDateTime.now().toString()
+                            val historico = Historico(
+                                plantaId = plantaId,
+                                dataHora = now,
+                                rega = true
+                            )
+                            historicoDao.inserirHistorico(historico)
+                            historicoList = historicoDao.obterHistoricosPorPlanta(plantaId)
+                        }
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.WaterDrop,
+                        contentDescription = "Registrar Rega"
                     )
                 }
 
