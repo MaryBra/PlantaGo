@@ -23,15 +23,15 @@ class PlantaViewModel(private val plantaDao: PlantaDao) : ViewModel() {
     }
 
     // Alterado para aceitar 'categoria' como String, não mais Int
-    fun salvarPlanta(nome: String, especie: String, fotoUrl: String?, categoria: String): String {
-        if (nome.isBlank() || especie.isBlank() || categoria.isBlank()) {
+    fun salvarPlanta(nome: String, descricao: String, fotoUrl: String?, categoria: String): String {
+        if (nome.isBlank() || descricao.isBlank() || categoria.isBlank()) {
             return "Preencha todos os campos obrigatórios!"
         }
 
         val planta = Planta(
             id = 0, // Novo id será gerado automaticamente
             nome = nome,
-            especie = especie,
+            descricao = descricao,
             fotoUrl = fotoUrl,
             categoria = categoria // Categoria agora é uma String
         )
@@ -52,15 +52,15 @@ class PlantaViewModel(private val plantaDao: PlantaDao) : ViewModel() {
     }
 
     // Alterado para aceitar 'categoria' como String, não mais Int
-    fun atualizarPlanta(id: Int, nome: String, especie: String, fotoUrl: String?, categoria: String): String {
-        if (nome.isBlank() || especie.isBlank() || categoria.isBlank()) {
+    fun atualizarPlanta(id: Int, nome: String, desc: String, fotoUrl: String?, categoria: String): String {
+        if (nome.isBlank() || desc.isBlank() || categoria.isBlank()) {
             return "Preencha todos os campos obrigatórios!"
         }
 
         val planta = listaPlantas.value.find { it.id == id } ?: return "Erro ao atualizar planta"
         val plantaAtualizada = planta.copy(
             nome = nome,
-            especie = especie,
+            descricao = desc,
             fotoUrl = fotoUrl,
             categoria = categoria // Categoria agora é uma String
         )

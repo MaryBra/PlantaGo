@@ -132,7 +132,7 @@ fun TelaDetalhes(plantaId: Int, plantaDao: PlantaDao) {
                     fontWeight = FontWeight.SemiBold
                 )
                 Text(
-                    text = "Espécie: ${it.especie}",
+                    text = "Descrição: ${it.descricao}",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Text(
@@ -260,7 +260,7 @@ fun PlantaCard(planta: Planta, onClick: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = "Espécie: ${planta.especie}",
+                text = "Detalhes: ${planta.descricao}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface
             )

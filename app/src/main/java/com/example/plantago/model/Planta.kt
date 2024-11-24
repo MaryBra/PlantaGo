@@ -8,7 +8,7 @@ data class Planta(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val nome: String,
-    val especie: String,
+    val descricao: String,
     val fotoUrl: String? = null,
     val categoria: String
 )

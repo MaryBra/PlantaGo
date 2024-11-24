@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavHostController
 import coil.compose.rememberAsyncImagePainter
 import com.example.plantago.dao.PlantaDao
@@ -26,7 +25,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
     var nome by remember { mutableStateOf("") }
-    var especie by remember { mutableStateOf("") }
+    var descricao by remember { mutableStateOf("") }
     var categoria by remember { mutableStateOf("") }
     var fotoUri by remember { mutableStateOf<Uri?>(null) }
     val coroutineScope = rememberCoroutineScope()
@@ -77,9 +76,9 @@ fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
                     .padding(bottom = 16.dp)
             )
             TextField(
-                value = especie,
-                onValueChange = { especie = it },
-                label = { Text("Espécie da Planta") },
+                value = descricao,
+                onValueChange = { descricao = it },
+                label = { Text("Detalhes da Planta") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
@@ -135,10 +134,10 @@ fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
             // Botão para salvar a planta
             Button(
                 onClick = {
-                    if (nome.isNotEmpty() && especie.isNotEmpty() && categoria.isNotEmpty()) {
+                    if (nome.isNotEmpty() && descricao.isNotEmpty() && categoria.isNotEmpty()) {
                         val novaPlanta = Planta(
                             nome = nome,
-                            especie = especie,
+                            descricao = descricao,
                             categoria = categoria,
                             fotoUrl = fotoUri?.toString() // Salva a URI como String
                         )
