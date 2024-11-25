@@ -24,30 +24,10 @@ Model: Define as classes de dados, como Planta e Historico.
 Dao: Interfaces para acesso ao banco de dados, como PlantaDao e HistoricoDao.
 ViewModel: Gerencia a lógica de negócios e o estado das telas, seguindo o padrão MVVM.
 Database: Configuração do banco de dados Room (AppDatabase).
-Como Executar o Projeto
-Pré-requisitos:
 
-Android Studio instalado (recomendado a versão mais recente).
-Ambiente configurado para desenvolvimento Android com SDK atualizado.
-Clonar o Repositório:
 
-bash
-Copiar código
-git clone https://github.com/seu-usuario/planta-go.git
-Abrir no Android Studio:
 
-Abra o Android Studio.
-Selecione "Open an Existing Project" e navegue até a pasta clonada.
-Sincronizar o Projeto:
 
-Aguarde o Android Studio sincronizar as dependências (Gradle Sync).
-Executar o Aplicativo:
-
-Conecte um dispositivo Android ou inicie um emulador.
-Clique no botão "Run" (ou use o atalho Shift + F10).
-Selecione o dispositivo de destino e aguarde a instalação.
-Uso do Aplicativo
-Tela Inicial:
 
 Ao abrir o aplicativo, você verá a tela principal com a lista de suas plantas.
 Se não houver plantas cadastradas, uma mensagem será exibida.
