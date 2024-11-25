@@ -1,5 +1,6 @@
 package com.example.plantago.view
 
+// Importações necessárias para o funcionamento do Composable
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,60 +22,73 @@ import com.example.plantago.dao.PlantaDao
 import com.example.plantago.model.Planta
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+// Classe para criar a tela de cadastro de uma planta.
+// Utiliza o Jetpack Compose para construir a interface de forma declarativa.
+@OptIn(ExperimentalMaterial3Api::class) // Permite o uso de APIs experimentais do Material3
 @Composable
 fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
-    var nome by remember { mutableStateOf("") }
-    var descricao by remember { mutableStateOf("") }
-    var categoria by remember { mutableStateOf("") }
-    var fotoUri by remember { mutableStateOf<Uri?>(null) }
+    // Variáveis de estado para armazenar os valores dos campos do formulário.
+    var nome by remember { mutableStateOf("") } // Estado para o campo "Nome da Planta".
+    var descricao by remember { mutableStateOf("") } // Estado para o campo "Descrição da Planta".
+    var categoria by remember { mutableStateOf("") } // Estado para o campo "Categoria da Planta".
+    var fotoUri by remember { mutableStateOf<Uri?>(null) } // Estado para armazenar o URI da foto selecionada.
+
+    // Escopo de coroutine que será usado para realizar operações assíncronas.
     val coroutineScope = rememberCoroutineScope()
 
-    // Launchers para capturar ou selecionar imagens
+    // Lançador para capturar uma foto diretamente da câmera.
     val tirarFotoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.TakePicturePreview()) { bitmap ->
         if (bitmap != null) {
-            // Converta o bitmap para Uri se necessário
-            fotoUri = Uri.EMPTY // Ajuste com sua lógica para salvar e obter Uri
+            // Aqui, o bitmap deveria ser salvo para gerar um URI correspondente.
+            // O código atual define `Uri.EMPTY`, o que pode não funcionar corretamente.
+            fotoUri = Uri.EMPTY
         }
     }
+
+    // Lançador para selecionar uma foto da galeria.
     val selecionarFotoLauncher = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         if (uri != null) {
+            // Atualiza o estado com o URI da foto selecionada.
             fotoUri = uri
         }
     }
 
+    // Contêiner principal que envolve toda a tela.
     Box(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center
+            .fillMaxSize() // Faz o contêiner ocupar toda a tela.
+            .padding(16.dp), // Adiciona espaçamento em volta do conteúdo.
+        contentAlignment = Alignment.Center // Centraliza o conteúdo dentro do Box.
     ) {
+        // Coluna que organiza os elementos verticalmente.
         Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally, // Centraliza os elementos horizontalmente.
+            verticalArrangement = Arrangement.Center, // Centraliza os elementos verticalmente.
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(24.dp)
-                .wrapContentHeight()
+                .fillMaxWidth() // A coluna ocupa toda a largura disponível.
+                .padding(24.dp) // Adiciona espaçamento interno.
+                .wrapContentHeight() // Ajusta a altura para envolver o conteúdo.
         ) {
-            // Título da tela
+            // Título da tela.
             Text(
-                text = "Cadastrar Planta",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 24.dp)
+                text = "Cadastrar Planta", // Texto exibido como título.
+                style = MaterialTheme.typography.headlineMedium, // Estilo de texto definido pelo tema.
+                fontWeight = FontWeight.Bold, // Define o peso da fonte.
+                color = MaterialTheme.colorScheme.primary, // Cor do texto com base no tema.
+                modifier = Modifier.padding(bottom = 24.dp) // Adiciona espaçamento abaixo do título.
             )
 
-            // Campos de texto
+            // Campo de texto para inserir o nome da planta.
             TextField(
-                value = nome,
-                onValueChange = { nome = it },
-                label = { Text("Nome da Planta") },
+                value = nome, // Valor atual do campo.
+                onValueChange = { nome = it }, // Atualiza o estado ao alterar o texto.
+                label = { Text("Nome da Planta") }, // Rótulo do campo.
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp)
+                    .fillMaxWidth() // O campo ocupa toda a largura disponível.
+                    .padding(bottom = 16.dp) // Adiciona espaçamento abaixo do campo.
             )
+
+            // Campo de texto para inserir a descrição da planta.
             TextField(
                 value = descricao,
                 onValueChange = { descricao = it },
@@ -83,6 +97,8 @@ fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
                     .fillMaxWidth()
                     .padding(bottom = 16.dp)
             )
+
+            // Campo de texto para inserir a categoria da planta.
             TextField(
                 value = categoria,
                 onValueChange = { categoria = it },
@@ -92,65 +108,77 @@ fun TelaCadastro(plantaDao: PlantaDao, navController: NavHostController) {
                     .padding(bottom = 24.dp)
             )
 
-            // Seção para adicionar foto
+            // Texto informativo sobre a adição de fotos.
             Text(
-                text = "Adicionar Foto (Opcional)",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 8.dp),
-                textAlign = TextAlign.Center
+                text = "Adicionar Foto (Opcional)", // Texto descritivo.
+                style = MaterialTheme.typography.bodyLarge, // Estilo do texto com base no tema.
+                color = MaterialTheme.colorScheme.primary, // Cor do texto definida pelo tema.
+                modifier = Modifier.padding(bottom = 8.dp), // Espaçamento abaixo do texto.
+                textAlign = TextAlign.Center // Alinha o texto ao centro.
             )
+
+            // Exibe a imagem selecionada, se houver.
             if (fotoUri != null) {
                 Image(
-                    painter = rememberAsyncImagePainter(fotoUri),
-                    contentDescription = "Foto da planta",
+                    painter = rememberAsyncImagePainter(fotoUri), // Carrega a imagem a partir do URI.
+                    contentDescription = "Foto da planta", // Descrição da imagem para acessibilidade.
                     modifier = Modifier
-                        .size(200.dp)
-                        .padding(8.dp),
-                    contentScale = ContentScale.Crop
+                        .size(200.dp) // Define o tamanho da imagem.
+                        .padding(8.dp), // Adiciona espaçamento em volta da imagem.
+                    contentScale = ContentScale.Crop // Ajusta a imagem para preencher o espaço definido.
                 )
             } else {
+                // Exibe um texto informando que nenhuma foto foi selecionada.
                 Text(
-                    text = "Nenhuma foto selecionada",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Color.Gray
+                    text = "Nenhuma foto selecionada", // Texto exibido.
+                    style = MaterialTheme.typography.bodySmall, // Estilo do texto.
+                    color = Color.Gray // Cor do texto.
                 )
             }
 
+            // Linha contendo os botões para tirar foto ou importar da galeria.
             Row(
-                horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.SpaceEvenly, // Distribui os botões uniformemente.
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp)
+                    .fillMaxWidth() // A linha ocupa toda a largura disponível.
+                    .padding(vertical = 16.dp) // Adiciona espaçamento acima e abaixo da linha.
             ) {
+                // Botão para tirar foto.
                 Button(onClick = { tirarFotoLauncher.launch(null) }) {
-                    Text("Tirar Foto")
+                    Text("Tirar Foto") // Texto exibido no botão.
                 }
+
+                // Botão para selecionar foto da galeria.
                 Button(onClick = { selecionarFotoLauncher.launch("image/*") }) {
-                    Text("Importar da Galeria")
+                    Text("Importar da Galeria") // Texto exibido no botão.
                 }
             }
 
-            // Botão para salvar a planta
+            // Botão para salvar a planta.
             Button(
                 onClick = {
+                    // Verifica se os campos obrigatórios estão preenchidos.
                     if (nome.isNotEmpty() && descricao.isNotEmpty() && categoria.isNotEmpty()) {
+                        // Cria um novo objeto Planta com os dados fornecidos.
                         val novaPlanta = Planta(
-                            nome = nome,
-                            descricao = descricao,
-                            categoria = categoria,
-                            fotoUrl = fotoUri?.toString() // Salva a URI como String
+                            nome = nome, // Nome da planta.
+                            descricao = descricao, // Descrição da planta.
+                            categoria = categoria, // Categoria da planta.
+                            fotoUrl = fotoUri?.toString() // Converte o URI da foto para String.
                         )
+
+                        // Lança uma coroutine para inserir a planta no banco de dados.
                         coroutineScope.launch {
-                            plantaDao.inserirPlanta(novaPlanta)
-                            navController.popBackStack()
+                            plantaDao.inserirPlanta(novaPlanta) // Insere a planta no banco.
+                            navController.popBackStack() // Volta para a tela anterior.
                         }
                     }
                 },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+                    .fillMaxWidth() // O botão ocupa toda a largura disponível.
+                    .height(56.dp) // Define a altura do botão.
             ) {
+                // Texto exibido no botão.
                 Text("Salvar Planta", fontSize = 18.sp)
             }
         }

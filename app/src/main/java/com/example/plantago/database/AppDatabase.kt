@@ -10,14 +10,12 @@ import com.example.plantago.dao.*
 import com.example.plantago.model.*
 
 @Database(
-    entities = [Planta::class, Categoria::class, Historico::class, Anotacao::class],
+    entities = [Planta::class, Historico::class],
     version = 1
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun plantaDao(): PlantaDao
-    abstract fun categoriaDao(): CategoriaDao
     abstract fun historicoDao(): HistoricoDao
-    abstract fun anotacoesDao(): AnotacaoDao
 
     companion object {
         @Volatile

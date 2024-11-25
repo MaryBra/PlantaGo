@@ -40,262 +40,277 @@ import com.example.plantago.view.ui.theme.PlantaGoTheme
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 
+// Classe principal da aplicação, estendendo ComponentActivity para usar Jetpack Compose
 class TelaInicial : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Inicialização do banco de dados
+        // Inicialização do banco de dados Room com a instância do AppDatabase
         val db = Room.databaseBuilder(
-            applicationContext,
-            AppDatabase::class.java,
-            "planta_database"
+            applicationContext, // Contexto da aplicação
+            AppDatabase::class.java, // Classe que define o banco de dados
+            "planta_database" // Nome do arquivo do banco de dados
         ).build()
 
-        // DAOs
-        val plantaDao = db.plantaDao()
-        val historicoDao = db.historicoDao() // Adiciona o HistoricoDao
+        // Criação dos DAOs para acessar as tabelas do banco de dados
+        val plantaDao = db.plantaDao() // DAO para plantas
+        val historicoDao = db.historicoDao() // DAO para históricos de rega
 
+        // Define o conteúdo da tela usando Jetpack Compose
         setContent {
-            PlantaGoTheme { // Envolva o conteúdo no tema
-                val navController = rememberNavController()
+            PlantaGoTheme { // Aplica o tema personalizado da aplicação
+                val navController = rememberNavController() // Controlador de navegação
                 AppNavHost(
-                    navController = navController,
-                    plantaDao = plantaDao,
-                    historicoDao = historicoDao // Passe o HistoricoDao para o AppNavHost
+                    navController = navController, // Passa o controlador de navegação
+                    plantaDao = plantaDao, // Passa o DAO de plantas
+                    historicoDao = historicoDao // Passa o DAO de históricos
                 )
             }
         }
     }
 }
 
-
+// Função composable que configura as rotas de navegação da aplicação
 @Composable
 fun AppNavHost(navController: NavHostController, plantaDao: PlantaDao, historicoDao: HistoricoDao) {
-    NavHost(navController = navController, startDestination = "main") {
+    // Define o NavHost, que gerencia as telas e as rotas
+    NavHost(navController = navController, startDestination = "main") { // Define "main" como rota inicial
+        // Rota para a tela principal
         composable("main") {
-            MainScreen(plantaDao = plantaDao, navController = navController)
+            MainScreen(plantaDao = plantaDao, navController = navController) // Tela principal
         }
+        // Rota para exibir os detalhes de uma planta
         composable(
-            route = "detalhes/{plantaId}",
-            arguments = listOf(navArgument("plantaId") { type = NavType.IntType })
+            route = "detalhes/{plantaId}", // Rota com parâmetro
+            arguments = listOf(navArgument("plantaId") { type = NavType.IntType }) // Define o tipo do parâmetro
         ) { backStackEntry ->
-            val plantaId = backStackEntry.arguments?.getInt("plantaId")
+            val plantaId = backStackEntry.arguments?.getInt("plantaId") // Obtém o ID da planta da navegação
             if (plantaId != null) {
                 TelaDetalhes(
-                    plantaId = plantaId,
-                    plantaDao = plantaDao,
-                    historicoDao = historicoDao, // Passe o historicoDao aqui
-                    navController = navController
+                    plantaId = plantaId, // Passa o ID da planta
+                    plantaDao = plantaDao, // Passa o DAO de plantas
+                    historicoDao = historicoDao, // Passa o DAO de históricos
+                    navController = navController // Passa o controlador de navegação
                 )
             } else {
+                // Mostra uma mensagem de erro caso o ID seja nulo
                 Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                    modifier = Modifier.fillMaxSize(), // Preenche a tela
+                    contentAlignment = Alignment.Center // Centraliza o conteúdo
                 ) {
                     Text(
-                        text = "Erro ao carregar os detalhes da planta.",
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyLarge,
-                        modifier = Modifier.padding(16.dp)
+                        text = "Erro ao carregar os detalhes da planta.", // Mensagem de erro
+                        color = MaterialTheme.colorScheme.error, // Cor de erro definida no tema
+                        style = MaterialTheme.typography.bodyLarge, // Estilo de texto
+                        modifier = Modifier.padding(16.dp) // Adiciona espaçamento ao redor do texto
                     )
                 }
             }
         }
+        // Rota para a tela de cadastro de uma nova planta
         composable("cadastro") {
             TelaCadastro(plantaDao = plantaDao, navController = navController)
         }
+        // Rota para editar uma planta existente
         composable(
-            route = "editar/{plantaId}",
-            arguments = listOf(navArgument("plantaId") { type = NavType.IntType })
+            route = "editar/{plantaId}", // Rota com parâmetro
+            arguments = listOf(navArgument("plantaId") { type = NavType.IntType }) // Define o tipo do parâmetro
         ) { backStackEntry ->
-            val plantaId = backStackEntry.arguments?.getInt("plantaId")
+            val plantaId = backStackEntry.arguments?.getInt("plantaId") // Obtém o ID da planta da navegação
             if (plantaId != null) {
                 TelaEditarPlanta(
-                    plantaId = plantaId,
-                    plantaDao = plantaDao,
-                    navController = navController
+                    plantaId = plantaId, // Passa o ID da planta
+                    plantaDao = plantaDao, // Passa o DAO de plantas
+                    navController = navController // Passa o controlador de navegação
                 )
             }
         }
     }
 }
 
-
-
-
+// Função composable que exibe os detalhes de uma planta específica
 @Composable
 fun TelaDetalhes(
-    plantaId: Int,
-    plantaDao: PlantaDao,
-    historicoDao: HistoricoDao,
-    navController: NavHostController
+    plantaId: Int, // ID da planta a ser exibida
+    plantaDao: PlantaDao, // DAO para acesso aos dados da planta
+    historicoDao: HistoricoDao, // DAO para acesso ao histórico de regas
+    navController: NavHostController // Controlador de navegação
 ) {
+    // Variável de estado para armazenar a planta
     var planta by remember { mutableStateOf<Planta?>(null) }
+    // Variável de estado para armazenar o histórico de regas
     var historicoList by remember { mutableStateOf<List<Historico>>(emptyList()) }
+    // Escopo de coroutine para operações assíncronas
     val coroutineScope = rememberCoroutineScope()
 
-    // Carrega a planta e o histórico ao iniciar
+    // Efeito lançado quando a tela é carregada
     LaunchedEffect(plantaId) {
-        planta = plantaDao.obterPlantaPorId(plantaId)
-        historicoList = historicoDao.obterHistoricosPorPlanta(plantaId)
+        planta = plantaDao.obterPlantaPorId(plantaId) // Busca a planta pelo ID
+        historicoList = historicoDao.obterHistoricosPorPlanta(plantaId) // Busca o histórico de regas
     }
 
     if (planta != null) {
+        // Layout principal para exibir os detalhes
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxSize() // Preenche toda a tela
+                .padding(16.dp) // Adiciona espaçamento interno
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
-                    .padding(bottom = 100.dp), // Espaço para os botões inferiores
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                    .fillMaxSize() // Preenche toda a altura
+                    .verticalScroll(rememberScrollState()) // Permite rolar o conteúdo verticalmente
+                    .padding(bottom = 100.dp), // Adiciona espaço para os botões inferiores
+                verticalArrangement = Arrangement.spacedBy(16.dp) // Espaça os elementos
             ) {
-                // Título
+                // Título da planta
                 Text(
-                    text = "🌱 ${planta!!.nome}",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    text = "🌱 ${planta!!.nome}", // Nome da planta com um emoji
+                    style = MaterialTheme.typography.headlineMedium, // Estilo do texto
+                    fontWeight = FontWeight.Bold, // Peso da fonte
+                    color = MaterialTheme.colorScheme.primary // Cor definida no tema
                 )
+                // Linha divisória
                 Divider(
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
-                    thickness = 1.dp
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), // Cor com transparência
+                    thickness = 1.dp // Espessura da linha
                 )
 
-                // Foto da planta
+                // Exibe a foto da planta, se disponível
                 if (planta!!.fotoUrl != null) {
                     AsyncImage(
-                        model = planta!!.fotoUrl,
-                        contentDescription = "Foto da planta",
+                        model = planta!!.fotoUrl, // URL da imagem
+                        contentDescription = "Foto da planta", // Descrição para acessibilidade
                         modifier = Modifier
-                            .size(200.dp)
-                            .clip(RoundedCornerShape(16.dp))
+                            .size(200.dp) // Tamanho da imagem
+                            .clip(RoundedCornerShape(16.dp)) // Arredonda os cantos da imagem
                             .border(
-                                width = 2.dp,
-                                color = MaterialTheme.colorScheme.primary,
-                                shape = RoundedCornerShape(16.dp)
+                                width = 2.dp, // Largura da borda
+                                color = MaterialTheme.colorScheme.primary, // Cor da borda
+                                shape = RoundedCornerShape(16.dp) // Formato da borda
                             ),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop // Ajusta a imagem para preencher o espaço
                     )
                 }
 
-                // Detalhes da planta
+                // Exibe a descrição da planta
                 Text(
-                    text = planta!!.descricao,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground
+                    text = planta!!.descricao, // Descrição da planta
+                    style = MaterialTheme.typography.bodyMedium, // Estilo do texto
+                    color = MaterialTheme.colorScheme.onBackground // Cor do texto
                 )
+                // Exibe a categoria da planta
                 Text(
-                    text = "Categoria: ${planta!!.categoria}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    text = "Categoria: ${planta!!.categoria}", // Categoria da planta
+                    style = MaterialTheme.typography.bodySmall, // Estilo do texto
+                    color = MaterialTheme.colorScheme.secondary // Cor do texto
                 )
 
-                // Histórico de regas
+                // Exibe o histórico de regas
                 Text(
-                    text = "💧 Histórico de Regas",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    text = "💧 Histórico de Regas", // Título da seção
+                    style = MaterialTheme.typography.titleMedium, // Estilo do texto
+                    fontWeight = FontWeight.Bold, // Peso da fonte
+                    color = MaterialTheme.colorScheme.primary // Cor do texto
                 )
 
                 if (historicoList.isEmpty()) {
+                    // Mensagem se não houver histórico de regas
                     Text(
-                        text = "Nenhuma rega registrada.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onBackground
+                        text = "Nenhuma rega registrada.", // Mensagem padrão
+                        style = MaterialTheme.typography.bodyMedium, // Estilo do texto
+                        color = MaterialTheme.colorScheme.onBackground // Cor do texto
                     )
                 } else {
+                    // Itera pelo histórico e exibe cada registro
                     historicoList.forEach { historico ->
-                        val formattedDate = historico.dataHora.substring(0, 16).replace("T", " ")
+                        val formattedDate = historico.dataHora.substring(0, 16).replace("T", " ") // Formata a data
                         Text(
-                            text = "🗓️ $formattedDate",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onBackground
+                            text = "🗓️ $formattedDate", // Exibe a data formatada
+                            style = MaterialTheme.typography.bodySmall, // Estilo do texto
+                            color = MaterialTheme.colorScheme.onBackground // Cor do texto
                         )
                     }
                 }
             }
 
-            // Botões flutuantes na parte inferior
+            // Botões flutuantes para ações (editar, regar e excluir)
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth() // Preenche a largura total
+                    .align(Alignment.BottomCenter) // Posiciona na parte inferior central
+                    .padding(16.dp), // Adiciona espaçamento interno
+                horizontalArrangement = Arrangement.SpaceEvenly, // Espaça os botões uniformemente
+                verticalAlignment = Alignment.CenterVertically // Alinha os botões verticalmente
             ) {
-                // Botão de editar
+                // Botão para editar a planta
                 FloatingActionButton(
-                    onClick = { navController.navigate("editar/$plantaId") },
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
+                    onClick = { navController.navigate("editar/$plantaId") }, // Navega para a tela de edição
+                    containerColor = MaterialTheme.colorScheme.primary, // Cor do botão
+                    contentColor = MaterialTheme.colorScheme.onPrimary // Cor do ícone
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = "Editar Planta"
+                        imageVector = Icons.Default.Edit, // Ícone de edição
+                        contentDescription = "Editar Planta" // Descrição para acessibilidade
                     )
                 }
 
-                // Botão de rega
+                // Botão para registrar uma rega
                 FloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
-                            val now = LocalDateTime.now().toString()
+                            val now = LocalDateTime.now().toString() // Obtém a data e hora atual
                             val historico = Historico(
-                                plantaId = plantaId,
-                                dataHora = now,
-                                rega = true
+                                plantaId = plantaId, // ID da planta
+                                dataHora = now, // Data e hora da rega
+                                rega = true // Marca como regada
                             )
-                            historicoDao.inserirHistorico(historico)
-                            historicoList = historicoDao.obterHistoricosPorPlanta(plantaId)
+                            historicoDao.inserirHistorico(historico) // Insere o histórico no banco de dados
+                            historicoList = historicoDao.obterHistoricosPorPlanta(plantaId) // Atualiza a lista
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary
+                    containerColor = MaterialTheme.colorScheme.secondary, // Cor do botão
+                    contentColor = MaterialTheme.colorScheme.onSecondary // Cor do ícone
                 ) {
                     Icon(
-                        imageVector = Icons.Default.WaterDrop,
-                        contentDescription = "Registrar Rega"
+                        imageVector = Icons.Default.WaterDrop, // Ícone de rega
+                        contentDescription = "Registrar Rega" // Descrição para acessibilidade
                     )
                 }
 
-                // Botão de excluir
+                // Botão para excluir a planta
                 FloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
-                            plantaDao.deletarPlantaPorId(plantaId)
-                            navController.popBackStack()
+                            plantaDao.deletarPlantaPorId(plantaId) // Deleta a planta do banco de dados
+                            navController.popBackStack() // Retorna à tela anterior
                         }
                     },
-                    containerColor = MaterialTheme.colorScheme.error,
-                    contentColor = MaterialTheme.colorScheme.onError
+                    containerColor = MaterialTheme.colorScheme.error, // Cor do botão
+                    contentColor = MaterialTheme.colorScheme.onError // Cor do ícone
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = "Excluir Planta"
+                        imageVector = Icons.Default.Delete, // Ícone de exclusão
+                        contentDescription = "Excluir Planta" // Descrição para acessibilidade
                     )
                 }
             }
         }
     } else {
-        // Tela de carregamento amigável
+        // Tela de carregamento enquanto a planta não é carregada
         Box(
             modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background),
-            contentAlignment = Alignment.Center
+                .fillMaxSize() // Preenche toda a tela
+                .background(MaterialTheme.colorScheme.background), // Define o fundo
+            contentAlignment = Alignment.Center // Centraliza o conteúdo
         ) {
-            CircularProgressIndicator(
-                color = MaterialTheme.colorScheme.primary
+            CircularProgressIndicator( // Indicador de carregamento
+                color = MaterialTheme.colorScheme.primary // Cor do indicador
             )
         }
     }
 }
+
 
 
 
